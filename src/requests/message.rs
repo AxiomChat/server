@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Server, types, utils::client::Client};
+use crate::{server::Server, types, utils::client::Client};
 
 crate::logger!(LOGGER "Message Manager");
 

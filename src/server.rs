@@ -5,17 +5,10 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-pub mod auth;
-pub mod macros;
-pub mod requests;
-pub mod types;
-pub mod utils;
-
-pub use anyhow::Context as ErrorContext;
-pub use anyhow::Result;
-
-use crate::{utils::client::Client, utils::plugin::DynPlugin};
-pub use once_cell;
+use crate::{
+    logger, types,
+    utils::{self, client::Client, plugin::DynPlugin},
+};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ServerConfig {
@@ -28,10 +21,10 @@ pub struct ServerConfig {
 
 #[allow(dead_code)]
 pub struct Server {
-    root: PathBuf,
-    config: ServerConfig,
-    plugins: Mutex<Vec<DynPlugin>>,
-    clients: Mutex<HashSet<Client>>,
+    pub root: PathBuf,
+    pub config: ServerConfig,
+    pub plugins: Mutex<Vec<DynPlugin>>,
+    pub clients: Mutex<HashSet<Client>>,
     pub db: utils::database::Database,
 }
 
@@ -60,10 +53,6 @@ impl ServerConfig {
 impl Server {
     logger!(LOGGER "Server");
 
-    pub fn new(root: &Path) -> Arc<Self> {
-        Self::new_config(root, ServerConfig::default())
-    }
-
     pub fn new_config(root: &Path, config: ServerConfig) -> Arc<Self> {
         Arc::new(Self {
             db: utils::database::Database::new(&config).unwrap(),
@@ -74,7 +63,7 @@ impl Server {
         })
     }
 
-    pub fn run(self: &Arc<Self>) -> Result<()> {
+    pub fn run(self: &Arc<Self>) -> crate::Result<()> {
         // Load plugins
         #[cfg(feature = "loader")]
         utils::loader::load_plugins(
@@ -120,10 +109,6 @@ impl Server {
         Ok(())
     }
 
-    pub fn add_plugin(self: &Arc<Self>, plugin: DynPlugin) {
-        self.plugins.lock().unwrap().push(plugin);
-    }
-
     fn init_client(self: &Arc<Self>, stream: TcpStream) -> anyhow::Result<Client> {
         Self::LOGGER.info(format!("New connection: {}", stream.peer_addr()?));
         // Initialize client
@@ -146,7 +131,7 @@ impl Server {
                 last_message,
                 ..
             })) => {
-                let auth_res = auth::auth(self, &mut client, &auth_token);
+                let auth_res = crate::auth::auth(self, &mut client, &auth_token);
                 let uuid = self.wrap_err(&client, auth_res)?;
                 self.wrap_err(
                     &client,

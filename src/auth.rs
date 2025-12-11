@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
+use anyhow::Context;
 use serde::Deserialize;
 
-use crate::{ErrorContext, logger};
-use crate::{Server, utils::client::Client};
+use crate::logger;
+use crate::server::Server;
+use crate::utils::client::Client;
 
 logger!(LOGGER "Auth");
 
