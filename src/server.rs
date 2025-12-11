@@ -63,11 +63,6 @@ impl Server {
 
     pub fn run(self: &Arc<Self>) -> crate::Result<()> {
         // Load plugins
-        #[cfg(feature = "loader")]
-        utils::loader::load_plugins(
-            &mut *self.plugins.lock().unwrap(),
-            &self.root.join("./plugins"),
-        )?;
 
         // Initialize plugins
 
