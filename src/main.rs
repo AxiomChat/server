@@ -1,4 +1,3 @@
-mod auth;
 mod macros;
 mod requests;
 mod server;

@@ -126,7 +126,7 @@ impl Server {
                 last_message,
                 ..
             })) => {
-                let auth_res = crate::auth::auth(self, &mut client, &auth_token);
+                let auth_res = utils::auth::auth(self, &mut client, &auth_token);
                 let uuid = self.wrap_err(&client, auth_res)?;
                 self.wrap_err(
                     &client,
