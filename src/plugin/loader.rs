@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fs,
-    io::Read,
+    io::{BufRead, BufReader, Read},
     net::{TcpListener, TcpStream},
     path::Path,
     process::Command,
@@ -27,14 +27,12 @@ pub struct PluginHandshake {
 }
 
 pub struct PluginLoader {
-    plugins: Vec<Plugin>,
     plugin_clients: Arc<Mutex<HashMap<String, TcpStream>>>,
 }
 
 impl PluginLoader {
     pub fn new() -> Self {
         Self {
-            plugins: Vec::new(),
             plugin_clients: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -58,15 +56,15 @@ impl PluginLoader {
             .is_none()
         {}
         LOGGER.info(format!("Loaded {}", plugin_json.id));
-        Plugin(
-            self.plugin_clients
-                .lock()
-                .unwrap()
-                .get(&plugin_json.id)
-                .unwrap()
-                .try_clone()
-                .unwrap(),
-        )
+        let a = self
+            .plugin_clients
+            .lock()
+            .unwrap()
+            .get(&plugin_json.id)
+            .unwrap()
+            .try_clone()
+            .unwrap();
+        Plugin(a.try_clone().unwrap(), BufReader::new(a))
     }
 
     pub fn start_server(&self) {
@@ -75,9 +73,10 @@ impl PluginLoader {
 
         std::thread::spawn(move || {
             for stream in listener.incoming() {
-                let mut stream = stream.unwrap();
+                let stream = stream.unwrap();
+                let mut reader = BufReader::new(&stream);
                 let mut s = String::new();
-                stream.read_to_string(&mut s).unwrap();
+                reader.read_line(&mut s).unwrap();
                 let plugin_handshake: PluginHandshake = serde_json::from_str(&s).unwrap();
                 plugin_clients
                     .lock()
