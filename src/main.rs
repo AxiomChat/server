@@ -1,4 +1,5 @@
 mod macros;
+mod plugin;
 mod requests;
 mod server;
 mod types;

@@ -1,12 +1,15 @@
 use std::{
     collections::HashSet,
+    fs,
     net::{TcpListener, TcpStream},
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
 use crate::{
-    logger, types,
+    logger,
+    plugin::loader::PluginLoader,
+    types,
     utils::{self, client::Client},
 };
 
@@ -25,6 +28,7 @@ pub struct Server {
     pub config: ServerConfig,
     pub clients: Mutex<HashSet<Client>>,
     pub db: utils::database::Database,
+    pub plugin_loader: PluginLoader,
 }
 
 impl Default for ServerConfig {
@@ -32,8 +36,8 @@ impl Default for ServerConfig {
         Self {
             port: 7080,
             server_name: format!("Server Name"),
-            server_id: format!("offline-server"),
-            server_key: format!(""),
+            server_id: format!("important"),
+            server_key: format!("important"),
             channels: Vec::new(),
         }
     }
@@ -58,13 +62,25 @@ impl Server {
             root: root.to_path_buf(),
             config,
             clients: Mutex::new(HashSet::new()),
+            plugin_loader: PluginLoader::new(),
         })
     }
 
     pub fn run(self: &Arc<Self>) -> crate::Result<()> {
         // Load plugins
+        Self::LOGGER.info("Loading plugins");
+        for entry in fs::read_dir(self.root.join("plugins"))? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                self.plugin_loader.load(&path);
+            }
+        }
+        Self::LOGGER.info("Plugins loaded");
 
         // Initialize plugins
+        Self::LOGGER.info("Initializing plugins");
 
         // Start server
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.config.port))?;
