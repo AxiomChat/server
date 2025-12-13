@@ -19,7 +19,10 @@ pub struct PluginHandshake {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type", content = "params", rename_all = "snake_case")]
 pub enum LoaderMessage {
-    Request(WsMessage<ClientMessage>),
+    Request {
+        user_id: String,
+        msg: WsMessage<ClientMessage>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -9,9 +9,13 @@
     "args"
   ],
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path or URL to the plugin schema"
+    },
     "id": {
       "type": "string",
-      "description": "Unique plugin identifier (recommended to be lowercase and use author/plugin format)",
+      "description": "Unique plugin identifier",
       "minLength": 1
     },
     "version": {

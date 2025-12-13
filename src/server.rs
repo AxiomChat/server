@@ -179,7 +179,10 @@ impl Server {
             let req = client.read()?;
             if let Some(r) = &req {
                 for p in self.plugins.lock().unwrap().iter_mut() {
-                    p.send(LoaderMessage::Request(r.clone()));
+                    p.send(LoaderMessage::Request {
+                        user_id: client.get_uuid().unwrap_or_default(),
+                        msg: r.clone(),
+                    });
                 }
 
                 self.wrap_err(&client, self.call_request(r, &client))?;
