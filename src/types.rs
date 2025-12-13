@@ -129,6 +129,7 @@ pub mod message {
 
     /// WebSocket wrapper
     #[derive(Debug, Clone, Serialize)]
+    #[serde(tag = "type", content = "params", rename_all = "snake_case")]
     pub enum WsMessage<T: Serialize + for<'de> Deserialize<'de>> {
         Message(T),
         Binary(Vec<u8>),
