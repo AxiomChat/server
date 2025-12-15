@@ -55,7 +55,11 @@ impl PluginLoader {
             .unwrap()
             .try_clone()
             .unwrap();
-        Plugin(a.try_clone().unwrap(), BufReader::new(a))
+        Plugin {
+            stream: a.try_clone().unwrap(),
+            reader: BufReader::new(a),
+            id: plugin_json.id,
+        }
     }
 
     pub fn start_server(&self) {
@@ -75,5 +79,15 @@ impl PluginLoader {
                     .insert(plugin_handshake.id, stream);
             }
         });
+    }
+}
+
+impl Clone for Plugin {
+    fn clone(&self) -> Self {
+        Plugin {
+            stream: self.stream.try_clone().unwrap(),
+            reader: BufReader::new(self.stream.try_clone().unwrap()),
+            id: self.id.clone(),
+        }
     }
 }

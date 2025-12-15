@@ -79,7 +79,10 @@ impl Server {
             let path = entry.path();
 
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                self.plugins.lock().unwrap().push(plugin_loader.load(&path));
+                let mut p = plugin_loader.load(&path);
+                let s = self.clone();
+                self.plugins.lock().unwrap().push(p.clone());
+                std::thread::spawn(move || p.run(&s));
             }
         }
         Self::LOGGER.info("Plugins loaded");
@@ -120,7 +123,7 @@ impl Server {
         Ok(())
     }
 
-    fn init_client(self: &Arc<Self>, stream: TcpStream) -> anyhow::Result<Client> {
+    fn init_client(self: &Arc<Self>, stream: TcpStream) -> crate::Result<Client> {
         Self::LOGGER.info(format!("New connection: {}", stream.peer_addr()?));
         // Initialize client
         let mut client = Client::new(stream)?;
@@ -173,7 +176,7 @@ impl Server {
         Ok(client)
     }
 
-    fn handle_client(self: &Arc<Self>, client: &Client) -> anyhow::Result<()> {
+    fn handle_client(self: &Arc<Self>, client: &Client) -> crate::Result<()> {
         // The main req/res loop
         loop {
             let req = client.read()?;
@@ -181,7 +184,7 @@ impl Server {
                 self.send_plugin_message(&LoaderMessage::Request {
                     user_id: client.get_uuid().unwrap_or_default(),
                     msg: r.clone(),
-                });
+                })?;
                 self.wrap_err(&client, self.call_request(r, &client))?;
             }
         }
@@ -204,9 +207,10 @@ impl Server {
         res
     }
 
-    pub fn send_plugin_message(&self, msg: &LoaderMessage) {
+    pub fn send_plugin_message(&self, msg: &LoaderMessage) -> crate::Result<()> {
         for p in self.plugins.lock().unwrap().iter_mut() {
-            p.send(msg);
+            p.send(msg)?;
         }
+        Ok(())
     }
 }
