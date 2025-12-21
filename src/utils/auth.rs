@@ -29,7 +29,7 @@ pub fn auth(server: &Arc<Server>, client: &mut Client, token: &str) -> crate::Re
 
 pub fn test(server: &Arc<Server>) -> crate::Result<()> {
     ureq::get(format!(
-        "https://vxchat.netlify.app/api/test-auth?key={}&id={}",
+        "https://vxchat.netlify.app/api/auth-test?key={}&id={}",
         server.config.server_key, server.config.server_id
     ))
     .call()

@@ -258,7 +258,9 @@ impl Server {
 
         // Stop plugins
         for plugin in self.plugins.lock().unwrap().iter_mut() {
-            let _ = plugin.stop();
+            if let Err(e) = plugin.stop() {
+                Self::LOGGER.warn(e.context("Couldn't stop plugin"));
+            }
         }
 
         Self::LOGGER.info("Shutdown complete");

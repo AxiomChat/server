@@ -63,9 +63,10 @@ impl Plugin {
         }
     }
 
-    pub fn stop(&mut self) {
-        self.send(&LoaderMessage::Shutdown).unwrap();
-        self.stream.shutdown(std::net::Shutdown::Both).unwrap();
-        self.child.lock().unwrap().kill().unwrap();
+    pub fn stop(&mut self) -> crate::Result<()> {
+        self.send(&LoaderMessage::Shutdown)?;
+        self.stream.shutdown(std::net::Shutdown::Both)?;
+        self.child.lock().unwrap().kill()?;
+        Ok(())
     }
 }
