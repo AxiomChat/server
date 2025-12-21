@@ -49,7 +49,7 @@ pub mod handshake {
     pub struct ClientDetails {
         pub version: String,
         pub auth_token: String,
-        pub last_message: Option<usize>,
+        pub last_message: Option<i64>,
     }
 }
 
@@ -70,12 +70,12 @@ pub mod message {
 
         /// Edit a message (if allowed)
         EditMessage {
-            message_id: usize,
+            message_id: i64,
             new_contents: String,
         },
 
         /// Delete a message (if allowed)
-        DeleteMessage { message_id: usize },
+        DeleteMessage { message_id: i64 },
     }
 
     /// Messages sent *from the server* to the client
@@ -101,7 +101,7 @@ pub mod message {
         /// A message was deleted
         MessageDelete {
             channel_id: String,
-            message_id: usize,
+            message_id: i64,
         },
 
         /// Presence updates
