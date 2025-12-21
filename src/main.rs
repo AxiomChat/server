@@ -1,3 +1,4 @@
+mod cli;
 mod macros;
 mod plugin;
 mod requests;

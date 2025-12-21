@@ -1,16 +1,14 @@
 use std::{
     collections::HashSet,
-    fs::{self, File},
+    fs::{self},
     net::{TcpListener, TcpStream},
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
-use zip::ZipArchive;
-
 use crate::{
-    logger,
-    plugin::{self, Plugin, loader::PluginLoader, types::LoaderMessage},
+    cli, logger,
+    plugin::{Plugin, loader::PluginLoader, types::LoaderMessage},
     types,
     utils::{self, client::Client},
 };
@@ -80,22 +78,8 @@ impl Server {
             let entry = entry?;
             let path = entry.path();
 
-            let p = if path.extension().and_then(|s| s.to_str()) == Some("vxp") {
-                plugin::loader::LOGGER.info(format!("Installing {:?}", path));
-                let d = path.with_extension("");
-                if !d.exists() {
-                    let file = File::open(&path)?;
-                    let mut archive = ZipArchive::new(file)?;
-                    archive.extract(&d)?;
-                }
-
-                d
-            } else {
-                path
-            };
-
-            if p.is_dir() {
-                let mut p = plugin_loader.load(&p);
+            if path.is_dir() {
+                let mut p = plugin_loader.load(&path);
                 let s = self.clone();
                 self.plugins.lock().unwrap().push(p.clone());
                 std::thread::spawn(move || p.run(&s));
@@ -105,6 +89,10 @@ impl Server {
 
         // Initialize plugins
         Self::LOGGER.info("Initializing plugins");
+
+        // Initialize CLI
+        Self::LOGGER.info("Initializing CLI");
+        cli::start_cli(self.clone(), plugin_loader);
 
         // Start server
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.config.port))?;
@@ -223,7 +211,7 @@ impl Server {
         res
     }
 
-    pub fn send_plugin_message(&self, msg: &LoaderMessage) -> crate::Result<()> {
+    pub fn send_plugin_message(self: &Arc<Self>, msg: &LoaderMessage) -> crate::Result<()> {
         for p in self.plugins.lock().unwrap().iter_mut() {
             p.send(msg)?;
         }
