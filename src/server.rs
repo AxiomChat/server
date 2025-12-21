@@ -9,6 +9,19 @@ use std::{
     },
 };
 
+const WELCOME: &str = "
+
+$$\\    $$\\  $$$$$$\\  $$\\   $$\\  $$$$$$\\  
+$$ |   $$ |$$  __$$\\ $$ |  $$ |$$  __$$\\ 
+$$ |   $$ |$$ /  $$ |\\$$\\ $$  |$$ /  $$ |
+\\$$\\  $$  |$$ |  $$ | \\$$$$  / $$$$$$$$ |
+ \\$$\\$$  / $$ |  $$ | $$  $$<  $$  __$$ |
+  \\$$$  /  $$ |  $$ |$$  /\\$$\\ $$ |  $$ |
+   \\$  /    $$$$$$  |$$ /  $$ |$$ |  $$ |
+    \\_/     \\______/ \\__|  \\__|\\__|  \\__|
+
+";
+
 use crate::{
     cli, logger,
     plugin::{Plugin, loader::PluginLoader, types::LoaderMessage},
@@ -101,6 +114,8 @@ impl Server {
         // Start server
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.config.port))?;
         Self::LOGGER.info(format!("Server listening at 0.0.0.0:{}", self.config.port));
+
+        println!("{WELCOME}\nversion {}\n", env!("CARGO_PKG_VERSION"));
 
         for stream in listener.incoming() {
             match stream {
