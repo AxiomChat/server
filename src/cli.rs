@@ -1,5 +1,6 @@
-use std::{fs::File, io, path::PathBuf, str::FromStr, sync::Arc};
+use std::{fs::File, path::PathBuf, str::FromStr, sync::Arc};
 
+use rustyline::{DefaultEditor, error::ReadlineError};
 use zip::ZipArchive;
 
 use crate::{logger, plugin::loader::PluginLoader, server::Server};
@@ -65,11 +66,24 @@ pub fn require_args(args: &[String], required: &[&str]) -> bool {
 
 pub fn start_cli(server: Arc<Server>, plugin_loader: PluginLoader) {
     std::thread::spawn(move || {
+        let mut rl = DefaultEditor::new().unwrap();
+
         loop {
-            let mut buf = String::new();
-            io::stdin().read_line(&mut buf).unwrap();
-            let args = parse_args(buf.trim());
-            if args.len() == 0 {
+            let line = match rl.readline("> ") {
+                Ok(line) => {
+                    rl.add_history_entry(line.as_str()).ok();
+                    line
+                }
+                Err(ReadlineError::Interrupted) => continue,
+                Err(ReadlineError::Eof) => break,
+                Err(err) => {
+                    LOGGER.error(format!("CLI error: {:?}", err));
+                    break;
+                }
+            };
+
+            let args = parse_args(line.trim());
+            if args.is_empty() {
                 continue;
             }
 
@@ -85,6 +99,7 @@ pub fn start_cli(server: Arc<Server>, plugin_loader: PluginLoader) {
                                 let mut archive = ZipArchive::new(file).unwrap();
                                 archive.extract(&d).unwrap();
                             }
+                            LOGGER.info("Installed");
                         } else {
                             LOGGER.error("File must be .vxp");
                         }
@@ -95,9 +110,10 @@ pub fn start_cli(server: Arc<Server>, plugin_loader: PluginLoader) {
                         plugin_loader.load(&server.root.join("plugins").join(&args[1]));
                     }
                 }
-                _ => {
-                    LOGGER.error(format!("Command not found ({})", args[0]));
+                "ping" => {
+                    LOGGER.info("pong");
                 }
+                _ => LOGGER.error(format!("Command not found: {}", args[0])),
             }
         }
     });
