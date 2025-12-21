@@ -28,14 +28,14 @@ impl PluginLoader {
         }
     }
 
-    pub fn load(&self, json_path: &Path) -> Plugin {
-        let json_string = fs::read_to_string(json_path).unwrap();
+    pub fn load(&self, path: &Path) -> Plugin {
+        let json_string = fs::read_to_string(path.join("plugin.json")).unwrap();
         let plugin_json: PluginJson = serde_json::from_str(&json_string).unwrap();
         LOGGER.info(format!("Loading {}", plugin_json.id));
 
         Command::new(plugin_json.file)
             .args(plugin_json.args)
-            .current_dir("plugins")
+            .current_dir(path)
             .spawn()
             .unwrap();
 

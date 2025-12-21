@@ -1,14 +1,16 @@
 use std::{
     collections::HashSet,
-    fs,
+    fs::{self, File},
     net::{TcpListener, TcpStream},
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
+use zip::ZipArchive;
+
 use crate::{
     logger,
-    plugin::{Plugin, loader::PluginLoader, types::LoaderMessage},
+    plugin::{self, Plugin, loader::PluginLoader, types::LoaderMessage},
     types,
     utils::{self, client::Client},
 };
@@ -78,8 +80,22 @@ impl Server {
             let entry = entry?;
             let path = entry.path();
 
-            if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                let mut p = plugin_loader.load(&path);
+            let p = if path.extension().and_then(|s| s.to_str()) == Some("vxp") {
+                plugin::loader::LOGGER.info(format!("Installing {:?}", path));
+                let d = path.with_extension("");
+                if !d.exists() {
+                    let file = File::open(&path)?;
+                    let mut archive = ZipArchive::new(file)?;
+                    archive.extract(&d)?;
+                }
+
+                d
+            } else {
+                path
+            };
+
+            if p.is_dir() {
+                let mut p = plugin_loader.load(&p);
                 let s = self.clone();
                 self.plugins.lock().unwrap().push(p.clone());
                 std::thread::spawn(move || p.run(&s));
