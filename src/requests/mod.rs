@@ -1,3 +1,4 @@
+pub mod chunk;
 pub mod message;
 
 use std::sync::Arc;
@@ -30,6 +31,13 @@ impl Server {
 
                 ClientMessage::DeleteMessage { message_id } => {
                     message::delete(self, client, *message_id)?
+                }
+
+                ClientMessage::LoadChunk {
+                    chunk_id,
+                    channel_id,
+                } => {
+                    chunk::load_chunk(self, client, channel_id, *chunk_id)?;
                 }
             },
 

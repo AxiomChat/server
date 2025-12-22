@@ -49,14 +49,16 @@ pub mod handshake {
     pub struct ClientDetails {
         pub version: String,
         pub auth_token: String,
-        pub last_message: Option<i64>,
     }
 }
 
 pub mod message {
     use serde::{Deserialize, Serialize};
 
-    use crate::types::{Author, data};
+    use crate::types::{
+        Author,
+        data::{self, Message},
+    };
 
     /// Messages sent *from the client* (user’s app) to the server
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,7 +77,14 @@ pub mod message {
         },
 
         /// Delete a message (if allowed)
-        DeleteMessage { message_id: i64 },
+        DeleteMessage {
+            message_id: i64,
+        },
+
+        LoadChunk {
+            channel_id: String,
+            chunk_id: usize,
+        },
     }
 
     /// Messages sent *from the server* to the client
@@ -85,7 +94,6 @@ pub mod message {
         /// Successful authentication
         Authenticated {
             uuid: Author,
-            messages: Vec<data::Message>,
         },
 
         TempMessage {
@@ -121,6 +129,8 @@ pub mod message {
         Shutdown {
             message: String,
         },
+
+        Chunk(Vec<Message>),
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
