@@ -99,6 +99,10 @@ impl Server {
         Self::LOGGER.info("Authenticating");
         auth::test(self)?;
 
+        // Initialize indicators
+        Self::LOGGER.info("Initializing indicators");
+        self.spawn_indicator_thread();
+
         // Initialize CLI
         Self::LOGGER.info("Initializing CLI");
         cli::start_cli(self.clone(), plugin_loader);
