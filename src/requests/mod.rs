@@ -1,6 +1,7 @@
 pub mod chunk;
-pub mod message;
 pub mod indicator;
+pub mod message;
+pub mod voice;
 
 use std::sync::Arc;
 
@@ -44,8 +45,9 @@ impl Server {
                 }
             },
 
-            WsMessage::Binary(b) => {
-                Self::LOGGER.info(format!("Binary message: {b:?}"));
+            WsMessage::Binary(data) => {
+                // Self::LOGGER.info(format!("Binary message: {data:?}"));
+                voice::voice(self, client, data)?;
             }
 
             WsMessage::String(s) => {
