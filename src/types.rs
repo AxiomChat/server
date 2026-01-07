@@ -53,6 +53,8 @@ pub mod handshake {
 }
 
 pub mod message {
+    use std::collections::HashMap;
+
     use serde::{Deserialize, Serialize};
 
     use crate::{
@@ -110,6 +112,7 @@ pub mod message {
         Authenticated {
             uuid: Author,
             indicators: Vec<IndicatorContext>,
+            voice_chat: HashMap<String, HashMap<String, u16>>,
         },
 
         TempMessage {

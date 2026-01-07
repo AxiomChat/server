@@ -46,16 +46,13 @@ impl Voice {
             .unwrap_or_default()
     }
 
-    /// Check if a user exists in a channel
-    pub fn check(&self, channel_id: &str, user_id: &str) -> Option<u16> {
-        self.connections
-            .get(channel_id)
-            .and_then(|users| users.get(user_id).copied())
-    }
-
     pub fn find_user(&self, user_id: &str) -> Option<(&String, u16)> {
         self.connections
             .iter()
             .find_map(|(channel_id, users)| users.get(user_id).map(|v| (channel_id, *v)))
+    }
+
+    pub fn get_connections(&self) -> HashMap<String, HashMap<String, u16>> {
+        self.connections.clone()
     }
 }

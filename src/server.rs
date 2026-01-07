@@ -175,6 +175,7 @@ impl Server {
                     client.send(types::message::ServerMessage::Authenticated {
                         uuid,
                         indicators: self.indicators.lock().unwrap().clone(),
+                        voice_chat: self.voice.lock().unwrap().get_connections(),
                     }),
                 )?;
             }
